@@ -1,0 +1,39 @@
+version: '3'
+services:
+        fluentd:
+                image: fluent/fluentd:v1.14-1
+                container_name: fluentd
+                restart: always
+                environment:
+                        - FLUENTD_CONF=fluentd.conf
+                ports:
+                        - 24224:24224
+                        - 24224:24224/udp
+                volumes:
+                        - ./fluentd_sv/conf/:/fluentd/etc:ro
+        jupyter_sv:
+                image: jupyter/scipy-notebook
+                container_name: jupyter_sv
+                restart: always
+                environment:
+                        - JUPYTER_ENABLE_LAB=yes
+                entrypoint: >
+                        jupyter-lab
+                        --ip 0.0.0.0
+                        --port 8000
+                        --no-browser
+                        --notebook-dir /home/juvyan
+                        --config /etc/jupyter/jupyter_lab_config.py
+                        --ServerApp.password ${JUPYTERPASSWD}
+                ports:
+                        - 8000:8000
+                volumes:
+                        - ./jupyter/:/etc/jupyter:ro
+                        - ./raid_fs:/home/juvyan
+                logging:
+                        driver: fluentd
+                        options:
+                                fluentd-address: localhost:24224
+                                tag: jupyter_sv
+                depends_on:
+                        - fluentd
