@@ -26,7 +26,7 @@ services:
                         --no-browser
                         --notebook-dir /home/juvyan
                         --config /etc/jupyter/jupyter_lab_config.py
-                        --ServerApp.password ${JUPYTERPASSWD}
+                        --ServerApp.password ${JUPYTER_PASSWD}
                 ports:
                         - 8000:8000
                 volumes:
@@ -50,8 +50,41 @@ services:
                         - 9200
                 ports:
                         - 9200:9200
+                logging:
+                        driver: fluentd
+                        options:
+                                fluentd-address: localhost:24224
+                                tag: docker.{{.Name}}
+                depends_on:
+                        - fluentd
         kibana:
                 image: docker.elastic.co/kibana/kibana:8.1.1
                 container_name: kibana
                 ports:
                         - 5601:5601
+                logging:
+                        driver: fluentd
+                        options:
+                                fluentd-address: localhost:24224
+                                tag: docker.{{.Name}}
+                depends_on:
+                        - fluentd
+                        - elasticsearch
+        samba:
+                image: dperson/samba
+                container_name: samba
+                ports:
+                        - 137:137/udp
+                        - 138:138/udp
+                        - 139:139/tcp
+                        - 445:445/tcp
+                volumes:
+                        - ./raid_fs:/mount
+                command: ${SAMBA_COMMANDS}
+                logging:
+                        driver: fluentd
+                        options:
+                                fluentd-address: localhost:24224
+                                tag: docker.{{.Name}}
+                depends_on:
+                        - fluentd
