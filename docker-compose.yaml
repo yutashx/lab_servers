@@ -88,3 +88,21 @@ services:
                                 tag: docker.{{.Name}}
                 depends_on:
                         - fluentd
+        nginx_fs:
+                build:
+                        context: ./nginx_fs
+                        dockerfile: Dockerfile
+                container_name: nginx_fs
+                ports:
+                        - 80:80
+                volumes:
+                        - ./nginx_fs/conf/conf.d:/etc/nginx/conf.d
+                        - ./raid_fs:/usr/share/nginx/fs
+                        - ./nginx_fs/html:/usr/share/nginx/html
+                logging:
+                        driver: fluentd
+                        options:
+                                fluentd-address: localhost:24224
+                                tag: docker.{{.Name}}
+                depends_on:
+                        - fluentd
